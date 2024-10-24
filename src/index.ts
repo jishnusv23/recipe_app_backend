@@ -1,6 +1,11 @@
 import express, { Application, Request, Response } from "express";
 import { config } from "dotenv";
+
+import userRouter from "./routes/user.router";
+import wishlistRouter from './routes/wishlist.router'
 import cors from "cors";
+import cookieParser from "cookie-parser";
+
 import morgan from "morgan";
 config();
 const app: Application = express();
@@ -14,10 +19,12 @@ const corsOptions = {
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser())
 app.use(morgan("dev"));
 app.use(cors(corsOptions));
 
-
+app.use("/api/users", userRouter);
+app.use('/api/wishlist',wishlistRouter)
 
 app.get("/test", (req: Request, res: Response) => {
   res
@@ -25,6 +32,6 @@ app.get("/test", (req: Request, res: Response) => {
     .json({ success: true, message: "execution service working " });
 });
 
-app.listen(PORT, () => {
+app.listen(PORT, async() => {
   console.log("The execution service will runign the port", PORT);
 });
