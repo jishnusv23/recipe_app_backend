@@ -86,7 +86,7 @@ export class WishlistService {
 
 
     const updatedProductIds = wishlist.productIds.filter(
-      (id) => id !== productId
+      (id:any) => id !== productId
     );
 
     return await prisma.wishlist.update({
