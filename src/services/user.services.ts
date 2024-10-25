@@ -8,7 +8,7 @@ export class UserServices {
         name: userData.name,
         email: userData.email,
         password: userData.password,
-        // isGAuth will default to false
+        
       },
     });
   

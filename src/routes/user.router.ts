@@ -12,4 +12,5 @@ router.post(
 
 router.post("/login", userController.userLogin.bind(userController));
 router.get("/getUser", userController.getUserData.bind(userController));
+router.delete("/logout", userController.userLogout.bind(userController));
 export default router;

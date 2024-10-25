@@ -7,6 +7,7 @@ import { generateRefreshToken } from "../lib/jwt/generateRefreshTocken";
 import { comparepassword } from "../lib/bcrypt/comparePassword";
 import { hashpassword } from "../lib/bcrypt/hashpassword";
 import { verifyToken } from "../lib/jwt/verifyToken";
+import { emit } from "process";
 config();
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 export class UserController {
@@ -66,22 +67,70 @@ export class UserController {
         idToken: credential,
         audience: process.env.GOOGLE_CLIENT_ID,
       });
-      const payload = ticket.getPayload();
-      console.log(
-        "🚀 ~ file: user.controller.ts:26 ~ UserController ~ createUserGoogle ~ payload:",
-        payload
-      );
-      const email = payload?.email;
-      let name = payload?.name;
 
-      console.log(
-        "🚀 ~ file: user.controller.ts:66 ~ UserController ~ createUserGoogle ~ name:",
-        name
-      );
+      const payload = ticket.getPayload();
+      console.log("Payload received from Google:", payload);
+
+      const email = payload?.email;
+      const name = payload?.name;
+
+      
+      const userExist = await this.userService.findByEmail(email as string);
+
+      if (userExist) {
+        
+        const accessToken = generateAccessToken({
+          id: String(userExist.id),
+          email: String(userExist.email),
+        });
+
+        const refreshToken = generateRefreshToken({
+          id: String(userExist.id),
+          email: userExist.email,
+        });
+
+        res.cookie("access_token", accessToken, { httpOnly: true });
+        res.cookie("refresh_token", refreshToken, { httpOnly: true });
+
+        res.status(201).json({ success: true, data: userExist });
+      }
+
+      if (email && name) {
+        const newUser = {
+          name: name,
+          email: email,
+          password: "hihiho", 
+        };
+
+        const createdUser = await this.userService.createUser(newUser);
+
+        
+        if (createdUser) {
+          const accessToken = generateAccessToken({
+            id: String(createdUser.id),
+            email: String(createdUser.email),
+          });
+
+          const refreshToken = generateRefreshToken({
+            id: String(createdUser.id),
+            email: createdUser.email,
+          });
+
+          res.cookie("access_token", accessToken, { httpOnly: true });
+          res.cookie("refresh_token", refreshToken, { httpOnly: true });
+
+          res.status(201).json({ success: true, data: createdUser });
+        }
+      }
+
+      res
+        .status(400)
+        .json({ success: false, message: "User could not be created" });
     } catch (error: any) {
       next(error);
     }
   }
+
   async userLogin(req: Request, res: Response, next: NextFunction) {
     try {
       console.log(req.body, "login data");
@@ -96,7 +145,7 @@ export class UserController {
         verifypassword
       );
       if (verifypassword) {
-        if (userExist) {
+        if (userExist && !userExist.isGAuth) {
           const accesstoken = generateAccessToken({
             id: String(userExist?.id),
             email: String(userExist?.email),
@@ -122,7 +171,7 @@ export class UserController {
         res.status(400).json({
           success: false,
           data: null,
-          message: "Password is not match",
+          message: "Password is not match Or Login with Google",
         });
       }
     } catch (error: any) {
@@ -141,21 +190,38 @@ export class UserController {
         "🚀 ~ file: user.controller.ts:140 ~ UserController ~ getUserData ~ verify:",
         verify
       );
-      const {id,email}=verify
+      const { id, email } = verify;
       const getUser = await this.userService.findByEmail(email);
-      console.log("🚀 ~ file: user.controller.ts:146 ~ UserController ~ getUserData ~ getUser:", getUser)
-      if(getUser){
-         const accesstoken = generateAccessToken({
-           id: String(getUser?.id),
-           email: String(getUser?.email),
-         });
-          res.cookie("access_token", accesstoken, { httpOnly: true });
-          res.status(200).json({success:true,data:getUser,message:'oke'})
-      }else{
-        res.status(400).json({success:false,data:null,message:'UnAuthorized'})
+      console.log(
+        "🚀 ~ file: user.controller.ts:146 ~ UserController ~ getUserData ~ getUser:",
+        getUser
+      );
+      if (getUser) {
+        const accesstoken = generateAccessToken({
+          id: String(getUser?.id),
+          email: String(getUser?.email),
+        });
+        res.cookie("access_token", accesstoken, { httpOnly: true });
+        res.status(200).json({ success: true, data: getUser, message: "oke" });
+      } else {
+        res
+          .status(400)
+          .json({ success: false, data: null, message: "UnAuthorized" });
       }
     } catch (error: any) {
-      next(error)
+      next(error);
+    }
+  }
+  async userLogout(req: Request, res: Response, next: NextFunction) {
+    try {
+      res.cookie("access_token", "", { maxAge: 1 });
+
+      res.cookie("refresh_token", "", { maxAge: 1 });
+
+      console.log("logout successfully");
+      res.status(200).json({});
+    } catch (error: any) {
+      next(error);
     }
   }
 }
