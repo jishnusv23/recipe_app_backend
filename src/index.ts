@@ -32,6 +32,6 @@ app.get("/test", (req: Request, res: Response) => {
     .json({ success: true, message: "execution service working " });
 });
 
-app.listen(PORT, async() => {
+app.listen(PORT||3001, async() => {
   console.log("The execution service will runign the port", PORT);
 });
