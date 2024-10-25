@@ -7,7 +7,7 @@ import { generateRefreshToken } from "../lib/jwt/generateRefreshTocken";
 import { comparepassword } from "../lib/bcrypt/comparePassword";
 import { hashpassword } from "../lib/bcrypt/hashpassword";
 import { verifyToken } from "../lib/jwt/verifyToken";
-import { emit } from "process";
+
 config();
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 export class UserController {
@@ -30,10 +30,7 @@ export class UserController {
       );
       if (!userExist) {
         const user = await this.userService.createUser(data);
-        // console.log(
-        //   "🚀 ~ file: user.controller.ts:14 ~ UserController ~ createUser ~ user:",
-        //   user
-        // );
+        
         if (user) {
           const accesstoken = generateAccessToken({
             id: String(user?.id),
@@ -140,12 +137,9 @@ export class UserController {
         password,
         userExist?.password as string
       );
-      console.log(
-        "🚀 ~ file: user.controller.ts:83 ~ UserController ~ userLogin ~ verifypassword:",
-        verifypassword
-      );
-      if (verifypassword) {
-        if (userExist && !userExist.isGAuth) {
+     
+      if ( userExist) {
+        if (verifypassword && !userExist.isGAuth) {
           const accesstoken = generateAccessToken({
             id: String(userExist?.id),
             email: String(userExist?.email),
