@@ -1,5 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import { WishlistService } from "../services/recipe.services";
+import { HttpStatusCode } from "../lib/statusCode/StatusCode";
 
 export class WishlistController {
   private wishlistService = new WishlistService();
@@ -33,14 +34,14 @@ export class WishlistController {
           productIdString
         );
         console.log("🚀 ~ Updated Wishlist:", updatedWishlist);
-        res.status(200).json({
+        res.status(HttpStatusCode.OK).json({
           success: true,
           message: "Product added to existing wishlist.",
           wishlist: updatedWishlist,
         });
       }
 
-      res.status(200).json({
+      res.status(HttpStatusCode.OK).json({
         success: false,
         message: "Product already in wishlist.",
       });
@@ -55,7 +56,7 @@ export class WishlistController {
       const {userId}=req.params
       const getUserWishlist=await this.wishlistService.getWishlistByUserId(userId)
       console.log("🚀 ~ file: wishlist.controller.ts:57 ~ WishlistController ~ getWishlist ~ getUserWishlist:", getUserWishlist)
-      res.status(200).json({success:true,data:getUserWishlist,message:"ok"})
+      res.status(HttpStatusCode.OK).json({success:true,data:getUserWishlist,message:"ok"})
     } catch (error: any) {
       next(error);
     }
