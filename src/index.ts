@@ -9,7 +9,7 @@ import cookieParser from "cookie-parser";
 
 import morgan from "morgan";
 import { HttpStatusCode } from "./lib/statusCode/StatusCode";
-import errorHandler from "./lib/errorHandler/errorHandler";
+import errorHandler from "./lib/errorHandler/errorHandler ";
 
 
 const app: Application = express();
